@@ -2,7 +2,7 @@
 
 This repo contains code and documentation related to the manuscript *Topological stratification of continuous genetic variation in large biobanks* by Diaz-Papkovich et al<sup>1</sup>. Our methodology uses UMAP<sup>2</sup> and the Malzer and Baum update to HDBSCAN<sup>3</sup>. 
 
-## Code
+## Dimensionality reduction and clustering code
 
 We use the Python implementations of both methods. We have provided two Python scripts to carry out the dimensionality reduction and clustering:
 1. `umap_script.py`
@@ -80,7 +80,20 @@ The general idea:
 
 There is some discussion on parameters in Diaz-Papkovich et al<sup>1</sup>. 
 
-As a demo, the two scripts are set up to use the 1KGP data, which is freely available [here](http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/supporting/hd_genotype_chip). For convenience, we have included some of the data in this repo, which is listed below. 
+As a demo, the two scripts are set up to use the 1KGP data, which is freely available [here](http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/supporting/hd_genotype_chip). For convenience, we have included some of the data in this repo, which is listed below. We have also included some demo code that visualizes the data:
+* `1kgp_interactive_demo.Rmd`: the R notebook
+* `1kgp_interactive_demo.html`: the [output](1kgp_interactive_demo.html) of the R notebook 
+
+## Manuscript code
+We have included the code used in our manuscript:
+* `1kgp_figures.Rmd`: Visualizations of 1KGP data, except for the ternary plot
+* `1kgp_ternary_plot.R`: Used to generate ternary plots
+* `helper_functions.R`: A variety of background functions to import data, export data, visualize clusters, etc
+* `pgs_evaluation.R`: Used to evaluate polygenic scores by clusters and look at potentially influential alleles
+* `ukb_pheno_distributions.R`: Used to visualize phenotype distributions for selected populations in the UKB
+* `ukb_plot_smoothed_phenotypes.R`: Used to plot the smoothed phenotypes from the UKB
+* `ukb_smoothing.R`: The smoothing algorithm used to regularize data over the 604 parametrizations
+* ``
 
 ## 1KGP data included
 

@@ -1,0 +1,305 @@
+---
+title: "Demo of topological stratification"
+author: "Alex Diaz-Papkovich"
+date: "July 2023"
+output:
+  html_document:
+    df_print: paged
+---
+
+# Introduction
+
+This is a demonstration of visualization of the method used in *Topological stratification of continuous genetic variation in large biobanks* by Diaz-Papkovich et al. We use data from the Thousand Genomes Project (1KGP) to generate static images via `ggplot2` and interactive plots using `plotly`. This script does not generate UMAP or HDBSCAN data---these are created in the accompanying Python scripts.
+
+The first portion of the script creates a static plot; the second creates an interactive plot.
+
+## Setup
+
+This is a pre-amble that sets up libraries, colours, directories, helper functions, etc. The data used here is stored in the `data` subfolder.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r Add libraries, echo=FALSE, message=FALSE}
+library(ggrepel)
+library(magrittr)
+library(plotly)
+library(RColorBrewer)
+library(tidyverse)
+```
+
+```{r Colour palettes, include=FALSE}
+colour_list <- list(c("ACB", "#bd9e39"),
+ c("ASW", "#8c6d31"),
+ c("BEB", "#637939"),
+ c("CDX", "#393b79"),
+ c("CEU", "#d6604d"),
+ c("CHB", "#5254a3"),
+ c("CHS", "#9e9ac8"),
+ c("CLM", "#7b4173"),
+ c("ESN", "#e7ba52"),
+ c("FIN", "#ad494a"),
+ c("GBR", "#843c39"),
+ c("GIH", "#8ca252"),
+ c("GWD", "#e7cb94"),
+ c("IBS", "#d6616b"),
+ c("ITU", "#b5cf6b"),
+ c("JPT", "#6b6ecf"),
+ c("KHV", "#9c9ede"),
+ c("LWK", "#7f3b08"),
+ c("MSL", "#b35806"),
+ c("MXL", "#a55194"),
+ c("PEL", "#ce6dbd"),
+ c("PJL", "#cedb9c"),
+ c("PUR", "#de9ed6"),
+ c("STU", "#c7e9c0"),
+ c("TSI", "#e7969c"),
+ c("YRI", "#e08214"))
+colour_dict <- data.frame(matrix(unlist(colour_list), nrow=length(colour_list), byrow=T))
+names(colour_dict) <- c("Population","Colour")
+colour_dict$Colour <- as.character(colour_dict$Colour)
+
+pal <- colour_dict$Colour
+names(pal) <- levels(colour_dict$Population)
+
+rm(colour_list)
+rm(colour_dict)
+```
+
+```{r Define some helper functions, include=FALSE}
+import_projection <- function(proj_dir, proj_name){
+  # Import a 2D projection -- this is used for visualization
+  proj_coords <- read.csv(paste(proj_dir, proj_name, sep="/"), header=F, sep=" ")
+  colnames(proj_coords) = c("x1","x2")
+  
+  return(proj_coords)
+}
+
+import_clusters <- function(clust_dir, clust_name){
+  # Import cluster labels.
+  clust_labels <- read.csv(paste(clust_dir, clust_name, sep="/"), header=F)
+  colnames(clust_labels) <- "cluster"
+  clust_labels$cluster <- factor(clust_labels$cluster)
+
+  return(clust_labels)
+}
+
+import_aux <- function(aux_dir, aux_file){
+  # Import auxiliary data (in this case, population labels)
+  samples <- read.csv(paste(aux_dir, aux_file, sep="/"), sep="\t")
+  samples$sample <- as.character(samples$sample)
+  samples <- samples[,-c(3)]
+  
+  return(samples)
+}
+
+import_descriptions <- function(aux_dir, aux_file){
+  # Import population descriptions by population code
+  temp <- read.csv(paste(aux_dir, aux_file, sep="/"), sep="\t")
+  # we only want the two relevant columns
+  # last row is "Total"
+  temp <- temp[1:nrow(temp)-1,c(1,2)]
+  temp$Population.Description <- as.character(temp$Population.Description)
+  
+  return(temp)
+}
+
+import_ids <- function(id_dir, id_file){
+  # Import the 1000GP IDs as ordered in the original VCF
+  ids <- read.csv(paste(id_dir, id_file, sep="/"), sep = " ", header=F)
+  
+  return(ids)
+}
+
+get_cluster_means <- function(in_data, dim1, dim2, cluster_var){
+  # Calculate the mean coordinate of a population variable (e.g. cluster)
+  cluster_coords <- in_data[,which(colnames(in_data) %in% c(cluster_var, dim1, dim2))]
+
+  coord_means_1 <- cluster_coords %>%
+    group_by(!! sym(cluster_var)) %>%
+    summarize(x1 = mean(!! sym(dim1)))
+  
+  coord_means_2 <- cluster_coords %>%
+    group_by(!! sym(cluster_var)) %>%
+    summarize(x2 = mean(!! sym(dim2)))
+  
+  coord_means <- left_join(coord_means_1, coord_means_2, by = c(cluster_var))
+  
+  return(coord_means)
+}
+```
+
+The directories below are set up to use pre-generated data. You may need to change them if you use the driver scripts (`call_umap_script.sh` and `call_hdbscan_script.py`) without changing the directories specified there.
+
+```{r Set up data directories and files and import data, include=FALSE}
+proj_dir <-"data"
+# UMAP projection to use for visualization
+proj_name <- "1000G_UMAP_PC100_NC2_NN15_MD0.5_admixturenotebook"
+
+# Location of clustering data
+cluster_dir <- "data"
+
+aux_dir <- "data/"
+aux_file <- "affy_samples.20141118.panel"
+
+label_file <- "20131219.populations.tsv"
+id_file <- "1KGP_ids.txt"
+
+coords <- import_projection(proj_dir, proj_name)
+
+samples <- import_aux(aux_dir, aux_file)
+descriptions <- import_descriptions(aux_dir, label_file)
+ids <- import_ids(aux_dir, id_file)
+```
+
+### Static plots using ggplot2
+
+We generate a static plot in this code chunk. The basic idea is simple: first plot the points, then colour them in based on their cluster label (from HDBSCAN) or sampling population label (from the 1KGP itself). There are some extra steps involved in colouring and label placement: we calculate the mean position of all points in a cluster to position its label; in some cases, labels need to appear multiple times (i.e. split clusters), so we have to manually define their positions---otherwise, the label can appear in the middle of nowhere.
+
+```{r Static plots using ggplot}
+# Image parameters (dot size, alpha)
+s <- 0.1
+a <- 0.4
+
+# Clustering file to use
+f <- "hdbscan_labels_min25_EPS0.5_1000G_UMAP_PC16_NC5_NN50_MD0.01_euclidean_2019814225811"
+
+clusters <- import_clusters(cluster_dir, f)
+
+main_data <- data.frame(cbind(ids, coords))
+colnames(main_data)[1] <- "ID"
+main_data$ID <- as.character(main_data$ID)
+
+main_data <- main_data[,-c(2)]
+
+# add population labels
+main_data <- merge(main_data, samples, by.x = "ID", by.y = "sample")
+
+# add cluster labels
+main_data$cluster <- clusters$cluster
+
+# Calculate the mean of the cluster labels (to place the labels)
+pop_means <- get_cluster_means(main_data, "x1", "x2", "pop")
+
+# Note that in this 2D visualization, the ITU and GIH populations  are split into multiple clusters
+pop_means <- subset(pop_means, !(pop %in% c("ITU","GIH")))
+pop_means <- rbind.data.frame(pop_means, list("ITU",-7,5))
+pop_means <- rbind.data.frame(pop_means, list("ITU",15,16))
+pop_means <- rbind.data.frame(pop_means, list("GIH",-7,5))
+pop_means <- rbind.data.frame(pop_means, list("GIH",2,15))
+
+ggplot(main_data, aes(x=x1, y=x2, colour=pop)) +
+  geom_point(size=s, alpha=a) +
+  scale_color_manual(name = "pop", values=pal) +
+  ggtitle("Thousand Genomes, coloured by sample population") +
+  xlab("UMAP1") + ylab("UMAP2") + theme_bw() + 
+  theme(legend.position = "none") + 
+  geom_label_repel(data = pop_means,
+                   aes(x=x1, y=x2, label=pop, colour = as.factor(pop)), size=5, alpha=0.6, label.size=0.05)
+
+# In this visualization, cluster 16 (mostly ITU individuals) is split into multiple clusters
+cluster_means <- get_cluster_means(main_data, "x1", "x2", "cluster")
+
+cluster_means <- subset(cluster_means, cluster!=16)
+cluster_means_extra <- cluster_means[FALSE,]
+cluster_means_extra <- rbind.data.frame(cluster_means_extra, data.frame(cluster="16",x1=-4.3,x2=5))
+cluster_means_extra <- rbind.data.frame(cluster_means_extra, data.frame(cluster="16",x1=15,x2=14))
+
+# Colour palette
+colourCount <- length(unique(main_data$cluster))
+getPalette = colorRampPalette(brewer.pal(9, "Set1"))
+colpal <- colorRampPalette(brewer.pal(8, "Set1"))(colourCount)
+
+# manually change some colours:
+colpal[15] <- "#FFBC2D"
+
+# randomly permute the colours for clarity.
+# sequential clusters are often (1) next to each other and (2) similarly coloured.
+colpal <- sample(colpal)
+
+# Plot the clusters
+ggplot(main_data, aes(x=x1, y=x2, colour=cluster)) +
+        geom_point(size=s, alpha=a) +
+  scale_color_manual(values = colpal) +
+  geom_label_repel(data = cluster_means,
+                   aes(x=x1, y=x2, label=cluster, colour = as.factor(cluster)), size=5, alpha=0.6) +
+  geom_label(data = cluster_means_extra,
+             aes(x=x1, y=x2, label=cluster, colour = as.factor(cluster)), size=5, alpha=0.6) +
+  ggtitle("Thousand Genomes, coloured by clustering algorithm") +
+  xlab("UMAP1") + ylab("UMAP2") + theme_bw() +
+  theme(legend.position = "none")
+```
+
+### Interactive plots
+
+In this chunk we generate interactive plots. One plot is coloured by 1KGP population label, while the other is coloured by cluster. Hovering over the points will show the relevant information for each individual.
+
+```{r Interactive plots}
+s <- 2
+  
+main_data <- data.frame(cbind(ids, coords))
+colnames(main_data)[1] <- "ID"
+main_data$ID <- as.character(main_data$ID)
+
+main_data <- main_data[,-c(2)]
+
+# add population labels
+main_data <- merge(main_data, samples, by.x = "ID", by.y = "sample")
+
+# add cluster labels
+main_data$cluster <- clusters$cluster
+
+# unassigned boolean
+# The clustering for this demo has been selected to not have any unclustered individuals
+main_data$unassigned <- ifelse(main_data$cluster==-1,"unassigned","assigned")
+
+colourCount <- length(unique(main_data$cluster))
+getPalette = colorRampPalette(brewer.pal(9, "Set1"))
+
+fig_main <- plot_ly(data = main_data, x = ~x1, y = ~x2,
+                    marker = list(size=s)) %>%
+  add_markers(color = ~pop, colors = pal, 
+              text = ~paste( "ID", ID, "\nCluster", cluster),
+              type = "scattergl", mode = "markers")
+
+fig_main
+
+fig_clusters <- plot_ly(data = main_data, x = ~x1, y = ~x2,
+                        marker = list(size=s)) %>%
+  add_markers(color = ~cluster, colors = getPalette(colourCount), 
+             text = ~paste( "ID", ID, "\nPopulation", pop),
+             type = "scattergl", mode = "markers")
+
+
+fig_clusters
+```
+
+### Cluster summaries
+
+This chunk of code looks at specific populations to see how many of their individuals wind up in different clusters.
+
+```{r Look at some specific clusters for summaries}
+
+print_pop_table <- function(p, in_data){
+  # Print the cluster membership of a specified population
+  cat(paste(p, "below"))
+  temp_data <- in_data %>% filter(pop==p)
+  print(table(temp_data$cluster))
+  cat("Proportion of population in largest cluster:")
+  print(max(table(temp_data$cluster))/sum(table(temp_data$cluster)))
+  cat("\n")
+}
+
+for (p in unique(main_data$pop)){
+  print_pop_table(p, main_data)
+}
+```
+
+
+
+
+
+
+
+
