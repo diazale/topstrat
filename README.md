@@ -123,7 +123,3 @@ These can be found in the `data` directory:
 1. Diaz-Papkovich et al. "Topological stratification of continuous genetic variation in large biobanks." (2023)
 2. McInnes, Leland, John Healy, and James Melville. "UMAP: Uniform manifold approximation and projection for dimension reduction." arXiv preprint arXiv:1802.03426 (2018).
 3. Malzer, Claudia, and Marcus Baum. "A hybrid approach to hierarchical density-based cluster selection." 2020 IEEE international conference on multisensor fusion and integration for intelligent systems (MFI). IEEE, 2020.
-
-## Manuscript code
-
-This repo also contains code used for visualization and analyses in our manuscript.
