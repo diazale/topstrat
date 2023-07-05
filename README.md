@@ -20,6 +20,8 @@ The UMAP script uses 8 parameters and assumes the input is the PCA data:
 * Output directory
 * Log directory
 
+^(This specifies the number of columns to use from the input data. In principle it can be any data, though it is typically the top PCs of some genetic data.)
+
 To execute the script, you can run:
 
 ```
