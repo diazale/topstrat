@@ -10,9 +10,9 @@ We use the Python implementations of both methods. We have provided two Python s
 
 These scripts can be executed via command line.
 
-For the UMAP script, there are 8 parameters:
+The UMAP script uses 8 parameters and assumes the input is the PCA data:
 * Input data
-* Number of PCs to use
+* Number of PCs<sup>^</sup> to use
 * Number of neighbours
 * Minimum distance in the low dimensional space
 * Number of components (dimensions) to reduce to. For clustering, we recommend a value of at least 3.
@@ -74,13 +74,24 @@ Since UMAP and HDBSCAN are not very computationally intensive, we recommend runn
 * `call_umap_script.sh`
 * `call_hdbscan_script.sh`
 
+They are set up to run a demonstration on 1KGP data by default (see below) but can be modified easily.
 The general idea:
 1. Run UMAP on your data to reduce its dimensionality. For visualization, we find relatively higher values of minimum distance to be useful (0.3 to 0.5). For clustering, values near or equal to 0 work better.
 2. Run HDBSCAN on your dimensionally-reduced UMAP data. For the epsilon parameter, we find 0.3 to 0.5 to be useful for biobank data.
 
 There is some discussion on parameters in Diaz-Papkovich et al<sup>1</sup>. 
 
-As a demo, the two scripts are set up to use the 1KGP data, which is freely available [here](http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/supporting/hd_genotype_chip). For convenience, we have included some of the data in this repo, which is listed below. We have also included some demo code that visualizes the data:
+### Demonstration
+The two driver scripts are set up to use the 1KGP data, which is freely available [here](http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/supporting/hd_genotype_chip). We have provided the top 100 PCs of the 1KGP data as part of this repo. 
+
+Once you have run `call_umap_script.sh`, you will need to run the following command in terminal:
+
+`ls projections/*.txt > umap_list.txt`
+
+This will create a list of the UMAP files generated, which can be fed into the HDBSCAN driver script.
+
+
+For convenience, we have included some of the data in this repo, which is listed below. We have also included some demo code that visualizes the data:
 * `1kgp_interactive_demo.Rmd`: the R notebook
 * `1kgp_interactive_demo.html`: the [output](https://diazale.github.io/topstrat/1kgp_interactive_demo.html) of the R notebook 
 

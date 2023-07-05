@@ -44,27 +44,48 @@ def str2bool(v):
         raise argparse.ArgumentTypeError('Boolean value expected.')
 
 
-parser = argparse.ArgumentParser(description='Run HDBSCAN on specified datasets.')
+example_text = '''
+Requires the following package: argparse, hdbscan, numpy, os, sys, time.
 
-parser.add_argument('-dset', metavar='dataset', type=str,
+File names are generated automatically based on the input file and parameters.
+
+EXAMPLE USAGE
+
+Dataset: my_umap.txt
+Run HDBSCAN on my_umap.txt with a minimum of 25 points per cluster and an epsilon value of 0.3, assuming no headers. We want membership probabilities.
+
+python hdbscan_clustering.py \\
+-dset ~/my_clustering_project/umap_data/my_umap.txt \\
+-min_points 25 \\
+-eps 0.3 \\
+-head F \\
+-probs T \\
+-outdir ~/my_clustering_project/hdbscan_clusters \\
+-probdir ~/my_clustering_project/membership_probabilities \\
+-log ~/my_clustering_project/hdbscan_logs
+'''
+
+parser = argparse.ArgumentParser(description='Run HDBSCAN on specified datasets.',
+                                 epilog=example_text,
+                                 formatter_class=argparse.RawTextHelpFormatter)
+
+parser.add_argument('-dset', metavar='DSET', type=str,
                     help='Input dataset')
-parser.add_argument('-min_points', type=int,
+parser.add_argument('-min_points', metavar='MP', type=int,
                     help='Minimum number of points in a cluster')
-parser.add_argument('-head', metavar='headers', type=str2bool,
+parser.add_argument('-head', metavar='HEAD', type=str2bool,
                     help='Indicate whether the file has headers')
-parser.add_argument('-eps', metavar='epsilon', type=float,
+parser.add_argument('-eps', metavar='EPSILON', type=float,
                     help='Epsilon value for unequal population sizes')
-parser.add_argument('-n_id', metavar='number_ID_cols', type=int,
-                    help='Number of ID columns in the file')
-parser.add_argument('-probs', metavar='membership_probability', type=str2bool,
+parser.add_argument('-probs', metavar='PROB', type=str2bool,
                     help='Select whether to return cluster membership probabilities')
 
 # Directories
-parser.add_argument('-outdir', type=str,
+parser.add_argument('-outdir', metavar='OUTDIR',type=str,
                     help='Output directory for cluster labels')
-parser.add_argument('-probdir', type=str,
+parser.add_argument('-probdir', metavar='PROBDIR', type=str,
                     help='Output directory for cluster membership probabilities')
-parser.add_argument('-log', type=str,
+parser.add_argument('-log', metavar='LOGDIR',type=str,
                     help='Log directory')
 
 args = parser.parse_args()
@@ -74,7 +95,6 @@ dset = args.dset
 min_points = args.min_points
 has_headers = args.head
 eps = args.eps
-n_id = args.n_id  # Note that this is unused so far
 probs = args.probs
 
 out_dir = args.outdir

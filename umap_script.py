@@ -57,35 +57,60 @@ def str2bool(v):
         raise argparse.ArgumentTypeError('Boolean value expected.')
 
 
+example_text = '''
+Requires the following packages: argparse, numpy, logging, os, sys, time, timeit, umap.
+
+File names are generated automatically based on the input file name and parameters.
+
+Files are time-stamped to avoid being overwritten from new runs.
+
+EXAMPLE USAGE
+
+Dataset: my_pcs.txt
+Run UMAP on the top 15 PCs, using 10 neighbours, a minimum distance of 0.001, reducing to 3D, assuming the first row of the file my_pcs.txt contains headers
+
+python umap_script.py \\ 
+-dset ~/Documents/my_umap_project/my_pcs.txt \\ 
+-pc 15 \\ 
+-nn 10 \\ 
+-md 0.001 \\ 
+-nc 3 \\ 
+-head T \\ 
+-outdir ~/Documents/my_umap_project/umap_projections \\ 
+-log ~/Documents/my_umap_project/logs
+'''
+
 # Define parser
-parser = argparse.ArgumentParser(description='Run UMAP on specified datasets.')
+parser = argparse.ArgumentParser(description='Run UMAP on specified datasets.',
+                                 epilog=example_text,
+                                 formatter_class=argparse.RawTextHelpFormatter)
 
 # Input variables
-parser.add_argument('-dset', metavar='dataset', type=str,
-                    help='Input dataset (assume PCs unless -gt specified)')
-parser.add_argument('-pc', metavar='PCs', type=int,
+parser.add_argument('-dset', metavar='DSET', type=str,
+                    help='Input dataset')
+parser.add_argument('-pc', metavar='PC', type=int,
                     default=10,
                     help='Number of top PCs to use (default 10)')
-parser.add_argument('-nn', metavar='neighbours', type=int,
+parser.add_argument('-nn', metavar='NN', type=int,
                     default=15,
                     help='Number of neighbours for UMAP (default 15)')
-parser.add_argument('-md', metavar='min_dist', type=float,
+parser.add_argument('-md', metavar='MD', type=float,
                     default=0.1,
                     help='Minimum distance for UMAP (default 0.1)')
-parser.add_argument('-nc', metavar='components', type=int,
+parser.add_argument('-nc', metavar='NC', type=int,
                     default=2,
                     help='Low dimensional components to project to (default 2D)')
-parser.add_argument('-met', metavar='distance', type=str,
+parser.add_argument('-met', metavar='MET', type=str,
                     default='euclidean',
                     help='Type of distance metric to use (default euclidean)')
-parser.add_argument('-outdir', type=str,
+parser.add_argument('-outdir', metavar='OUTDIR', type=str,
                     help='Output directory')
-parser.add_argument('-head', metavar='headers', type=str2bool,
+parser.add_argument('-head', metavar='HEADERS', type=str2bool,
                     help='Indicate whether the file has headers')
-parser.add_argument('-n_id', type=int,
+parser.add_argument('-n_id', metavar='NID', type=int,
                     default=2,
                     help='Number of ID columns')
-parser.add_argument('-log', type=str,
+parser.add_argument('-log', metavar='LOG', type=str,
                     help='Log directory')
 
 args = parser.parse_args()
