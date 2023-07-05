@@ -1,0 +1,563 @@
+---
+title: "Code to generate 1KGP plots"
+author: "Alex Diaz-Papkovich"
+date: "06/16/2023"
+output: html_document
+---
+
+This document is used to generate/store figures for the manuscript.
+
+```{r Add libraries}
+library(ggrepel)
+library(RColorBrewer)
+library(tidyverse)
+library(viridis)
+```
+
+```{r Colour palettes}
+# Colours for 1KGP populations
+colour_list <- list(c("ACB", "#bd9e39"),
+ c("ASW", "#8c6d31"),
+ c("BEB", "#637939"),
+ c("CDX", "#393b79"),
+ c("CEU", "#d6604d"),
+ c("CHB", "#5254a3"),
+ c("CHS", "#9e9ac8"),
+ c("CLM", "#7b4173"),
+ c("ESN", "#e7ba52"),
+ c("FIN", "#ad494a"),
+ c("GBR", "#843c39"),
+ c("GIH", "#8ca252"),
+ c("GWD", "#e7cb94"),
+ c("IBS", "#d6616b"),
+ c("ITU", "#b5cf6b"),
+ c("JPT", "#6b6ecf"),
+ c("KHV", "#9c9ede"),
+ c("LWK", "#7f3b08"),
+ c("MSL", "#b35806"),
+ c("MXL", "#a55194"),
+ c("PEL", "#ce6dbd"),
+ c("PJL", "#cedb9c"),
+ c("PUR", "#de9ed6"),
+ c("STU", "#c7e9c0"),
+ c("TSI", "#e7969c"),
+ c("YRI", "#e08214"))
+colour_dict <- data.frame(matrix(unlist(colour_list), nrow=length(colour_list), byrow=T))
+names(colour_dict) <- c("Population","Colour")
+colour_dict$Colour <- as.character(colour_dict$Colour)
+
+pal <- colour_dict$Colour
+names(pal) <- levels(colour_dict$Population)
+
+rm(colour_list)
+rm(colour_dict)
+```
+
+```{r Define some helper functions}
+# 2D data for visualization
+import_projection <- function(proj_dir, proj_name){
+        proj_coords <- read.csv(paste(proj_dir, proj_name, sep="/"), header=F, sep=" ")
+        colnames(proj_coords) = c("x1","x2")
+        
+        return(proj_coords)
+}
+
+# Cluster labels (ideally from higher dimensional data)
+import_clusters <- function(clust_dir, clust_name){
+        clust_labels <- read.csv(paste(clust_dir, clust_name, sep="/"), header=F)
+        colnames(clust_labels) <- "cluster"
+        clust_labels$cluster <- factor(clust_labels$cluster)
+        
+        return(clust_labels)
+}
+
+# Auxiliary data (population labels)
+import_aux <- function(aux_dir, aux_file){
+        samples <- read.csv(paste(aux_dir, aux_file, sep="/"), sep="\t")
+        samples$sample <- as.character(samples$sample)
+        samples <- samples[,-c(3)]
+        
+        return(samples)
+}
+
+# Population descriptions by population code
+import_descriptions <- function(aux_dir, aux_file){
+        temp <- read.csv(paste(aux_dir, aux_file, sep="/"), sep="\t")
+        # we only want the two relevant columns
+        # last row is "Total"
+        temp <- temp[1:nrow(temp)-1,c(1,2)]
+        temp$Population.Description <- as.character(temp$Population.Description)
+        
+        return(temp)
+}
+
+# 1KGP IDs (if not already present) as ordered on the original VCF
+import_ids <- function(id_dir, id_file){
+        ids <- read.csv(paste(id_dir, id_file, sep="/"), sep = " ", header=F)
+        
+        return(ids)
+}
+
+# Get the mean (x,y) coordinates of a cluster so we can label them in the figure.
+get_cluster_means <- function(in_data, dim1, dim2, cluster_var){
+  cluster_coords <- in_data[,which(colnames(in_data) %in% c(cluster_var, dim1, dim2))]
+
+  coord_means_1 <- cluster_coords %>%
+    group_by(!! sym(cluster_var)) %>%
+    summarize(x1 = mean(!! sym(dim1)))
+  
+  coord_means_2 <- cluster_coords %>%
+    group_by(!! sym(cluster_var)) %>%
+    summarize(x2 = mean(!! sym(dim2)))
+  
+  coord_means <- left_join(coord_means_1, coord_means_2, by = c(cluster_var))
+  
+  # remove mean of unclustered (generally not informative)
+  #coord_means <- coord_means[coord_means$cluster!=-1,]
+  
+  return(coord_means)
+}
+```
+
+```{r Set up data directories and files}
+proj_dir <-"data"
+proj_name <- "1000G_UMAP_PC100_NC2_NN15_MD0.5_admixturenotebook"
+
+cluster_dir <- "data"
+
+aux_dir <- "data"
+aux_file <- "affy_samples.20141118.panel"
+
+label_file <- "20131219.populations.tsv"
+id_file <- "1KGP_ids.txt"
+```
+
+```{r Import base data}
+coords <- import_projection(proj_dir, proj_name)
+
+samples <- import_aux(aux_dir, aux_file)
+descriptions <- import_descriptions(aux_dir, label_file)
+ids <- import_ids(aux_dir, id_file)
+```
+
+
+```{r Plot the figures with labels}
+s <- 0.1 # point size
+a <- 0.4 # alpha
+h_ <- 5 # height
+w_ <- 5 # width
+dpi_ <- 600 # dpi
+l_size_ <- 3 # label size
+ext <- "png" # File extension/ggplot device
+
+f <- "hdbscan_labels_min25_EPS0.5_1000G_UMAP_PC16_NC5_NN50_MD0.01_euclidean_2019814225811"
+
+set.seed(1300) # Fix seed (the label points are kind of random)
+
+clusters <- import_clusters(cluster_dir, f)
+
+main_data <- data.frame(cbind(ids, coords))
+colnames(main_data)[1] <- "ID"
+main_data$ID <- as.character(main_data$ID)
+
+main_data <- main_data[,-c(2)]
+
+# add population labels
+main_data <- merge(main_data, samples, by.x = "ID", by.y = "sample")
+
+# add cluster labels
+main_data$cluster <- clusters$cluster
+
+pop_means <- get_cluster_means(main_data, "x1", "x2", "pop")
+pop_means <- subset(pop_means, !(pop %in% c("ITU","GIH")))
+pop_means <- rbind.data.frame(pop_means, list("ITU",-7,5))
+pop_means <- rbind.data.frame(pop_means, list("ITU",15,16))
+pop_means <- rbind.data.frame(pop_means, list("GIH",-7,5))
+pop_means <- rbind.data.frame(pop_means, list("GIH",2,15))
+
+# Projection without any colours
+ggplot(main_data, aes(x=x1, y=x2)) +
+  geom_point(size=s, alpha=a) +
+  ggtitle("1000 Genomes Project, without labels") +
+  xlab("UMAP1") + ylab("UMAP2") + theme_bw() + 
+  theme(legend.position = "none")
+                   
+#ggsave(filename = paste("1KGP_no_colours.",ext,sep=""),
+#       dpi = dpi_,
+#       device = ext,
+#       path = "images", h=h_, w = w_)
+
+# Projection with colours and labels based on known populations
+ggplot(main_data, aes(x=x1, y=x2, colour=pop)) +
+  geom_point(size=s, alpha=a) +
+  scale_color_manual(name = "pop", values=pal) +
+  ggtitle("1000 Genomes Project, coloured by population") +
+  xlab("UMAP1") + ylab("UMAP2") + theme_bw() + 
+  theme(legend.position = "none") + 
+  geom_label_repel(data = pop_means,
+                   aes(x=x1, y=x2, label=pop, colour = as.factor(pop)), size=l_size_, alpha=0.6, label.size=0.05)
+
+#ggsave(filename = paste("1KGP_population_colours.",ext,sep=""),
+#       dpi = dpi_,
+#       device = ext,
+#       path = "images", h=h_, w = w_)
+```
+
+```{r Heatmap of cluster-pop agreement}
+h_ <- 4.7 # height
+w_ <- 5.8 # width
+dpi_ <- 600 # dpi
+ext <- "png"
+
+# Cross the categories with populations for a heat map
+crosstab <- data.frame(table(main_data$pop, main_data$cluster))
+colnames(crosstab) <- c("pop","cluster","freq")
+
+# Calculate proportions
+pop_counts <- data.frame(table(main_data$pop))
+colnames(pop_counts) <- c("pop","count")
+crosstab <- left_join(crosstab, pop_counts, by = c("pop"="pop"))
+crosstab$pct <- with(crosstab, freq/count)
+crosstab_filtered <- subset(crosstab, pct > 0) # Remove empty rows for easier viewing
+
+# Secondary cluster labels (to re-order)
+#6, 8, 18, 4, 17, 12, 9, 0, 5, 19, 3,  16, 13, 1,  20, 11, 7,  15,  2, 3,  10
+#0, 1, 2 , 3, 4 , 5 , 6, 7, 8, 9,  10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20
+crosstab <- crosstab %>%
+  mutate(
+    cluster_2 = case_when(
+      cluster==6 ~ 0,
+      cluster==8 ~ 1,
+      cluster==18 ~ 2,
+      cluster==4 ~ 3,
+      cluster==17 ~ 4,
+      cluster==12 ~ 5,
+      cluster==9 ~ 6,
+      cluster==0 ~ 7,
+      cluster==5 ~ 8,
+      cluster==19 ~ 9,
+      cluster==3 ~ 10,
+      cluster==16 ~ 11,
+      cluster==13 ~ 12,
+      cluster==1 ~ 13,
+      cluster==20 ~ 14,
+      cluster==11 ~ 15,
+      cluster==7 ~ 16,
+      cluster==15 ~ 17,
+      cluster==2 ~ 18,
+      cluster==14 ~ 19,
+      cluster==10 ~ 20
+    )
+  )
+
+ggplot(crosstab, aes(pop, as.factor(cluster_2))) +
+  geom_tile(aes(fill = pct), colour = "black") +
+  scale_x_discrete(labels=c("0.5" = "Dose 0.5", "1" = "Dose 1",
+                              "2" = "Dose 2")) + 
+  scale_fill_viridis(name="Proportion \nof 1KGP\npopulation") +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(),
+        axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
+        axis.text.y = element_text()) +
+  xlab("Population") + ylab("HDBSCAN cluster")
+
+#ggsave(filename = paste("1KGP_heatmap.",ext,sep=""),
+#       dpi = dpi_,
+#       device = ext,
+#       path = "images", h = h_, w = w_)
+```
+
+```{r Plot 1KGP data coloured by clusters}
+# Create a plot of the 1KGP data coloured by HDBSCAN clusters.
+# There is a bit of work here to manually re-label clusters so their order matches the heatmap
+# The heatmap is ordered alphabetically for convenience.
+# Labels are arbitrarily numbered so there is no change to the results, this is just to make it visually simpler.
+s <- 0.1 # point size
+a <- 0.4 # alpha
+h_ <- 5 # height
+w_ <- 5 # width
+dpi_ <- 600 # dpi
+l_size_ <- 3 # label size
+ext <- "png" # File extension/ggplot device
+
+f <- "hdbscan_labels_min25_EPS0.5_1000G_UMAP_PC16_NC5_NN50_MD0.01_euclidean_2019814225811"
+
+clusters <- import_clusters(cluster_dir, f)
+
+main_data <- data.frame(cbind(ids, coords))
+colnames(main_data)[1] <- "ID"
+main_data$ID <- as.character(main_data$ID)
+
+main_data <- main_data[,-c(2)]
+
+# add population labels
+main_data <- merge(main_data, samples, by.x = "ID", by.y = "sample")
+
+# add cluster labels
+main_data$cluster <- clusters$cluster
+
+pop_means <- get_cluster_means(main_data, "x1", "x2", "pop")
+pop_means <- subset(pop_means, !(pop %in% c("ITU","GIH")))
+pop_means <- rbind.data.frame(pop_means, list("ITU",-7,5))
+pop_means <- rbind.data.frame(pop_means, list("ITU",15,16))
+pop_means <- rbind.data.frame(pop_means, list("GIH",-7,5))
+pop_means <- rbind.data.frame(pop_means, list("GIH",2,15))
+
+# Projection with colours and labels based on HDBSCAN(eps) clustering
+# Figure out where to put cluster labels
+cluster_means <- get_cluster_means(main_data, "x1", "x2", "cluster")
+
+# Note: ITU is split into multiple clusters in this projection (cluster 16)
+# Remove the mean and manually label the cluster
+cluster_means <- subset(cluster_means, cluster!=16)
+
+cluster_means_extra <- cluster_means[FALSE,]
+cluster_means_extra <- rbind.data.frame(cluster_means_extra, data.frame(cluster="16",x1=-4.3,x2=5))
+cluster_means_extra <- rbind.data.frame(cluster_means_extra, data.frame(cluster="16",x1=15,x2=14))
+
+# Set up the colour palette
+colourCount <- length(unique(main_data$cluster))
+getPalette = colorRampPalette(brewer.pal(9, "Set1"))
+colpal <- colorRampPalette(brewer.pal(8, "Set1"))(colourCount)
+
+# manually change some colours:
+# 14 is too yellow
+colpal[15] <- "#FFBC2D"
+
+# randomly permute the colours. sequential clusters are often (1) next to each other and (2) similarly coloured.
+set.seed(125) # Fix seed so we don't generate a new colour permutation every time
+colpal <- sample(colpal)
+
+# Swap a few colours -- some neighbouring clusters are still too similarly coloured
+# 5 and 20, 16 and 18, 1 and 3
+temp <- colpal[5]
+colpal[5] <- colpal[20]
+colpal[20] <- temp
+
+temp <- colpal[16]
+colpal[16] <- colpal[18]
+colpal[18] <- temp
+
+temp <- colpal[1]
+colpal[1] <- colpal[3]
+colpal[3] <- temp
+
+# Try swapping 12-16 (13-17) and 8-18 (9-19) to fix an issue with the ternary plot
+# Change implemented 2023-04-21
+temp <- colpal[13]
+colpal[13] <- colpal[17]
+colpal[17] <- temp
+
+temp <- colpal[9]
+colpal[9] <- colpal[19]
+colpal[19] <- temp
+
+# Set up labels using cluster 2
+main_data <- main_data %>% mutate(
+    cluster_2 = case_when(
+      cluster==6 ~ 0,
+      cluster==8 ~ 1,
+      cluster==18 ~ 2,
+      cluster==4 ~ 3,
+      cluster==17 ~ 4,
+      cluster==12 ~ 5,
+      cluster==9 ~ 6,
+      cluster==0 ~ 7,
+      cluster==5 ~ 8,
+      cluster==19 ~ 9,
+      cluster==3 ~ 10,
+      cluster==16 ~ 11,
+      cluster==13 ~ 12,
+      cluster==1 ~ 13,
+      cluster==20 ~ 14,
+      cluster==11 ~ 15,
+      cluster==7 ~ 16,
+      cluster==15 ~ 17,
+      cluster==2 ~ 18,
+      cluster==14 ~ 19,
+      cluster==10 ~ 20
+      )
+    )
+
+cluster_means <- cluster_means %>% mutate(
+    cluster_2 = case_when(
+      cluster==6 ~ 0,
+      cluster==8 ~ 1,
+      cluster==18 ~ 2,
+      cluster==4 ~ 3,
+      cluster==17 ~ 4,
+      cluster==12 ~ 5,
+      cluster==9 ~ 6,
+      cluster==0 ~ 7,
+      cluster==5 ~ 8,
+      cluster==19 ~ 9,
+      cluster==3 ~ 10,
+      cluster==16 ~ 11,
+      cluster==13 ~ 12,
+      cluster==1 ~ 13,
+      cluster==20 ~ 14,
+      cluster==11 ~ 15,
+      cluster==7 ~ 16,
+      cluster==15 ~ 17,
+      cluster==2 ~ 18,
+      cluster==14 ~ 19,
+      cluster==10 ~ 20
+      )
+    )
+
+cluster_means_extra <- cluster_means_extra %>% mutate(
+    cluster_2 = case_when(
+      cluster==6 ~ 0,
+      cluster==8 ~ 1,
+      cluster==18 ~ 2,
+      cluster==4 ~ 3,
+      cluster==17 ~ 4,
+      cluster==12 ~ 5,
+      cluster==9 ~ 6,
+      cluster==0 ~ 7,
+      cluster==5 ~ 8,
+      cluster==19 ~ 9,
+      cluster==3 ~ 10,
+      cluster==16 ~ 11,
+      cluster==13 ~ 12,
+      cluster==1 ~ 13,
+      cluster==20 ~ 14,
+      cluster==11 ~ 15,
+      cluster==7 ~ 16,
+      cluster==15 ~ 17,
+      cluster==2 ~ 18,
+      cluster==14 ~ 19,
+      cluster==10 ~ 20
+      )
+    )
+
+ggplot(main_data, aes(x=x1, y=x2, colour=as.factor(cluster))) +
+        geom_point(size=s, alpha=a) +
+  scale_color_manual(values = colpal) +
+  geom_label_repel(data = cluster_means,
+                   aes(x=x1, y=x2, label=cluster, colour = as.factor(cluster)), size=l_size_, alpha=0.6) +
+  geom_label(data = cluster_means_extra,
+             aes(x=x1, y=x2, label=cluster, colour = as.factor(cluster)), size=l_size_, alpha=0.6) +
+  ggtitle("1000 Genomes, coloured by clustering algorithm (original labels)") +
+  xlab("UMAP1") + ylab("UMAP2") + theme_bw() +
+  theme(legend.position = "none")
+
+set.seed(300) # set seed for random label placement (just wanna get a good one)
+ggplot(main_data, aes(x=x1, y=x2, colour=as.factor(cluster_2))) +
+        geom_point(size=s, alpha=a) +
+  scale_color_manual(values = colpal) +
+  geom_label_repel(data = cluster_means,
+                   aes(x=x1, y=x2, label=cluster_2, colour = as.factor(cluster_2)), size=l_size_, alpha=0.6) +
+  geom_label(data = cluster_means_extra,
+             aes(x=x1, y=x2, label=cluster_2, colour = as.factor(cluster_2)), size=l_size_, alpha=0.6) +
+  ggtitle("1000 Genomes, coloured by clustering algorithm") +
+  xlab("UMAP1") + ylab("UMAP2") + theme_bw() +
+  theme(legend.position = "none")
+
+#ggsave(filename = paste("1KGP_cluster_colours.",ext,sep=""),
+#       dpi = dpi_,
+#       device = ext,
+#       path = "images", h = h_, w = w_)
+```
+
+```{r Table of crosstab}
+main_data <- main_data %>% mutate(
+    cluster_2 = case_when(
+      cluster==6 ~ 0,
+      cluster==8 ~ 1,
+      cluster==18 ~ 2,
+      cluster==4 ~ 3,
+      cluster==17 ~ 4,
+      cluster==12 ~ 5,
+      cluster==9 ~ 6,
+      cluster==0 ~ 7,
+      cluster==5 ~ 8,
+      cluster==19 ~ 9,
+      cluster==3 ~ 10,
+      cluster==16 ~ 11,
+      cluster==13 ~ 12,
+      cluster==1 ~ 13,
+      cluster==20 ~ 14,
+      cluster==11 ~ 15,
+      cluster==7 ~ 16,
+      cluster==15 ~ 17,
+      cluster==2 ~ 18,
+      cluster==14 ~ 19,
+      cluster==10 ~ 20
+      )
+    )
+
+# Cross the categories with populations for a heat map
+crosstab <- data.frame(table(main_data$pop, main_data$cluster_2))
+
+colnames(crosstab) <- c("pop","cluster","freq")
+
+# Calculate proportions
+pop_counts <- data.frame(table(main_data$pop))
+colnames(pop_counts) <- c("pop","count")
+crosstab <- left_join(crosstab, pop_counts, by = c("pop"="pop"))
+crosstab$pct <- with(crosstab, freq/count)
+crosstab_filtered <- subset(crosstab, pct > 0) # Remove empty rows for easier viewing
+
+# Set up a table of the population-cluster relationships and their counts
+crosstab_ms <- crosstab_filtered# %>% select(., -cluster)
+crosstab_ms <- crosstab_ms[order(crosstab_ms$pop, -crosstab_ms$pct),]
+crosstab_ms <- crosstab_ms[,c(1,5,2,3,4)]
+colnames(crosstab_ms) <- c("1KGP population","Cluster","Count","Total in 1KGP","Proportion")
+
+# LaTeX output
+latex_string <- knitr::kable(crosstab_ms, "latex", row.names = FALSE)
+
+##### Cross-tab the other way
+crosstab <- data.frame(table(main_data$pop, main_data$cluster_2))
+crosstab <- crosstab[,c(2,1,3)] # re-arrange so i don't have to sort later
+colnames(crosstab) <- c("cluster","pop","freq")
+crosstab <- subset(crosstab, freq > 0)
+
+# Get relative frequencies in groups
+crosstab <- crosstab %>%
+  group_by(cluster,pop) %>%
+  summarise(freq=freq) %>%
+  mutate(pct = freq/sum(freq))
+
+crosstab_ms <- crosstab
+
+colnames(crosstab_ms) <- c("Cluster","1KGP population","Number in cluster","Proprtion")
+
+# LaTeX output
+latex_string <- knitr::kable(crosstab_ms, "latex", row.names = FALSE)
+```
+
+```{r Count number of people in continent using either method}
+afr_clusters <- c(9,10,20,19,1,6)
+eas_clusters <- c(13,17,18)
+eur_clusters <- c(0,3,4)
+sas_clusters <- c(5,8,14,15,16)
+csa_clusters <- c(2,12,11,7)
+cluster_by_continent <- data.frame(as.factor(c(afr_clusters, eas_clusters, eur_clusters, sas_clusters, csa_clusters)),
+                                   as.factor(c(rep("AFR", length(afr_clusters)),
+                                     rep("EAS", length(eas_clusters)),
+                                     rep("EUR", length(eur_clusters)),
+                                     rep("SAS", length(sas_clusters)),
+                                     rep("CSA", length(csa_clusters)))))
+colnames(cluster_by_continent) <- c("cluster","continent_cluster")
+
+afr_pops <- c("GWD", "YRI", "ESN", "MSL", "LWK", "ACB", "ASW")
+eas_pops <- c("CHS", "JPT", "CHB", "KHV", "CDX")
+eur_pops <- c("TSI", "IBS", "CEU", "FIN", "GBR")
+sas_pops <- c("GIH", "STU", "ITU", "PJL", "BEB")
+csa_pops <- c("PUR", "CLM", "MXL", "PEL")
+pops_by_continent <- data.frame(as.factor(c(afr_pops, eas_pops, eur_pops, sas_pops, csa_pops)),
+                                as.factor(c(rep("AFR", length(afr_pops)),
+                                  rep("EAS", length(eas_pops)),
+                                  rep("EUR", length(eur_pops)),
+                                  rep("SAS", length(sas_pops)),
+                                  rep("CSA", length(csa_pops)))))
+colnames(pops_by_continent) <- c("pop","continent_pop")
+
+continent_data <- left_join(main_data, cluster_by_continent, by = "cluster")
+continent_data <- left_join(continent_data, pops_by_continent, by = "pop")
+
+table(continent_data$continent_cluster)
+table(continent_data$continent_pop)
+```

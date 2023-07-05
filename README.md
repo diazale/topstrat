@@ -82,7 +82,7 @@ There is some discussion on parameters in Diaz-Papkovich et al<sup>1</sup>.
 
 As a demo, the two scripts are set up to use the 1KGP data, which is freely available [here](http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/supporting/hd_genotype_chip). For convenience, we have included some of the data in this repo, which is listed below. We have also included some demo code that visualizes the data:
 * `1kgp_interactive_demo.Rmd`: the R notebook
-* `1kgp_interactive_demo.html`: the [output](1kgp_interactive_demo.html) of the R notebook 
+* `1kgp_interactive_demo.html`: the [output](https://diazale.github.io/topstrat/1kgp_interactive_demo.html) of the R notebook 
 
 ## Manuscript code
 We have included the code used in our manuscript:
@@ -93,9 +93,10 @@ We have included the code used in our manuscript:
 * `ukb_pheno_distributions.R`: Used to visualize phenotype distributions for selected populations in the UKB
 * `ukb_plot_smoothed_phenotypes.R`: Used to plot the smoothed phenotypes from the UKB
 * `ukb_smoothing.R`: The smoothing algorithm used to regularize data over the 604 parametrizations
-* ``
 
 ## 1KGP data included
+
+These can be found in the `data` directory:
 
 * `1000G_UMAP_PC100_NC2_NN15_MD0.5_admixturenotebook`: A 2D UMAP of 1KGP data for visualization used in the manuscript
 * `1KGP_ids.txt`: Columns of the IDs from the 1KGP
