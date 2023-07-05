@@ -81,7 +81,7 @@ The general idea:
 1. Run UMAP on your data to reduce its dimensionality. For visualization, we find relatively higher values of minimum distance to be useful (0.3 to 0.5). For clustering, values near or equal to 0 work better.
 2. Run HDBSCAN on your dimensionally-reduced UMAP data. For the epsilon parameter, we find 0.3 to 0.5 to be useful for biobank data.
 
-There is some discussion on parameters in Diaz-Papkovich et al<sup>1</sup>. 
+There is some discussion on parameters in the Supplementary Information of Diaz-Papkovich et al<sup>1</sup>. 
 
 ### Demonstration
 The two driver scripts are set up to use the 1KGP data, which is freely available [here](http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/supporting/hd_genotype_chip). We have provided the top 100 PCs of the 1KGP data as part of this repo. 
@@ -90,8 +90,7 @@ Once you have run `call_umap_script.sh`, you will need to run the following comm
 
 `ls projections/*.txt > umap_list.txt`
 
-This will create a list of the UMAP files generated, which can be fed into the HDBSCAN driver script.
-
+This will create a list of the UMAP files generated, which can be fed into the HDBSCAN driver script, `call_hdbscan_script.sh`.
 
 For convenience, we have included some of the data in this repo, which is listed below. We have also included some demo code that visualizes the data:
 * `1kgp_interactive_demo.Rmd`: the R notebook
