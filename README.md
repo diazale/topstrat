@@ -2,7 +2,7 @@
 
 This repo contains code and documentation related to the manuscript *Topological stratification of continuous genetic variation in large biobanks* by Diaz-Papkovich et al<sup>1</sup>. Our methodology uses UMAP<sup>2</sup> and the Malzer and Baum update to HDBSCAN<sup>3</sup>. 
 
-## Dimensionality reduction and clustering code
+## Dimensionality reduction and clustering scripts
 
 We use the Python implementations of both methods. We have provided two Python scripts to carry out the dimensionality reduction and clustering:
 1. `umap_script.py`
@@ -66,9 +66,9 @@ python hdbscan_clustering.py \
 -log [log directory]
 ```
 
-The output filename contains the parameters and the input file:
+The output filename contains the parameters, the input file, and a timestamp:
 
-`hdbscan_labels_min[min_points]_EPS[epsilon]_[input_file].txt`
+`hdbscan_labels_min[min_points]_EPS[epsilon]_[input_file]_[timestamp].txt`
 
 The output format is a single column of numeric cluster labels. The label `-1` indicates a point was not place in a cluster.
 
