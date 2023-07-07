@@ -1,6 +1,6 @@
 # Topological stratification of biobank data
 
-This repo contains code and documentation related to the manuscript *Topological stratification of continuous genetic variation in large biobanks* by Diaz-Papkovich et al<sup>1</sup>. Our methodology uses UMAP<sup>2</sup> and the Malzer and Baum update to HDBSCAN<sup>3</sup>. 
+This repo contains code and documentation related to the manuscript *Topological stratification of continuous genetic variation in large biobanks* by Diaz-Papkovich et al<sup>1</sup>. Our methodology uses UMAP<sup>2</sup> and the Malzer and Baum update to HDBSCAN<sup>3</sup> $\hat{\epsilon}$. 
 
 ## Dimensionality reduction and clustering scripts
 
