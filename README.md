@@ -86,15 +86,12 @@ There is some discussion on parameters in the Supplementary Information of Diaz-
 ### Demonstration
 The two driver scripts are set up to use the 1KGP data, which is freely available [here](http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/supporting/hd_genotype_chip). We have provided the top 100 PCs of the 1KGP data as part of this repo. 
 
-Once you have run `call_umap_script.sh`, you will need to run the following command in terminal:
-
-`ls projections/*.txt > umap_list.txt`
-
-This will create a list of the UMAP files generated, which can be fed into the HDBSCAN driver script, `call_hdbscan_script.sh`.
+1. Run `call_umap_script.sh`. This will generate several UMAP files.
+2. Run `ls projections/*.txt > umap_list.txt` to create a file listing all of the files generated in step `1.`
+3. Run `call_hdbscan_script.sh`.
 
 For convenience, we have included some of the data in this repo, which is listed below. We have also included some demo code that visualizes the data:
-* `1kgp_interactive_demo.Rmd`: the R notebook
-* `1kgp_interactive_demo.html`: the [output](https://diazale.github.io/topstrat/1kgp_interactive_demo.html) of the R notebook 
+* [Demo code with interactive plots](https://diazale.github.io/topstrat/1kgp_interactive_demo.html) (generated from `1kgp_interactive_demo.Rmd`) 
 
 ## Manuscript code
 We have included the code used in our manuscript:
@@ -119,6 +116,6 @@ These can be found in the `data` directory:
 
 ## Citations
 
-1. Diaz-Papkovich et al. "Topological stratification of continuous genetic variation in large biobanks." (2023)
-2. McInnes, Leland, John Healy, and James Melville. "UMAP: Uniform manifold approximation and projection for dimension reduction." arXiv preprint arXiv:1802.03426 (2018).
-3. Malzer, Claudia, and Marcus Baum. "A hybrid approach to hierarchical density-based cluster selection." 2020 IEEE international conference on multisensor fusion and integration for intelligent systems (MFI). IEEE, 2020.
+1. Diaz-Papkovich et al. "[Topological stratification of continuous genetic variation in large biobanks](https://www.biorxiv.org/content/10.1101/2023.07.06.548007v1)." (2023)
+2. McInnes, Leland, John Healy, and James Melville. "[UMAP: Uniform manifold approximation and projection for dimension reduction.](https://arxiv.org/abs/1802.03426)" arXiv:1802.03426 (2018).
+3. Malzer, Claudia, and Marcus Baum. "[A hybrid approach to hierarchical density-based cluster selection.](https://ieeexplore.ieee.org/abstract/document/9235263)" 2020 IEEE international conference on multisensor fusion and integration for intelligent systems (MFI). IEEE, 2020.
