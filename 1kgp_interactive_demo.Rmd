@@ -296,10 +296,35 @@ for (p in unique(main_data$pop)){
 }
 ```
 
+### Appendix
 
+Population abbreviations and their names
 
-
-
-
-
-
+| Abbreviation | Population name |
+| ------------ | --------------- |
+| ACB | African Caribbean in Barbados |
+| ASW | African Ancestry in SW USA  |
+| BEB | Bengali in Bangladesh |
+| CDX | Chinese Dai in Xishuangbanna, China |
+| CEU | Utah residents with Northern/Western European ancestry |
+| CHB | Han Chinese in Beijing, China |
+| CHS | Han Chinese South |
+| CLM | Colombian in Medellin, Colombia |
+| ESN | Esan in Nigeria |
+| FIN | Finnish in Finland |
+| GBR | British From England and Scotland |
+| GWD | Gambian in Western Division -- Mandinka |
+| GIH | Gujarati Indians in Houston, Texas, USA |
+| IBS | Iberian Populations in Spain |
+| ITU | Indian Telugu in the UK |
+| JPT | Japanese in Tokyo, Japan |
+| KHV | Kinh in Ho Chi Minh City, Vietnam |
+| LWK | Luhya in Webuye, Kenya |
+| MSL | Mende in Sierra Leone |
+| MXL | Mexican Ancestry in Los Angeles, CA, USA |
+| PEL | Peruvian in Lima, Peru |
+| PJL | Punjabi in Lahore, Pakistan |
+| PUR | Puerto Rican in Puerto Rico |
+| STU | Sri Lankan Tamil in the UK |
+| TSI | Toscani in Italy |
+| YRI | Yoruba in Ibadan, Nigeria |
