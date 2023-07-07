@@ -29,7 +29,7 @@ library(RColorBrewer)
 library(tidyverse)
 ```
 
-```{r Colour palettes, include=FALSE}
+```{r Colour palettes, include=TRUE}
 colour_list <- list(c("ACB", "#bd9e39"),
  c("ASW", "#8c6d31"),
  c("BEB", "#637939"),
@@ -67,7 +67,7 @@ rm(colour_list)
 rm(colour_dict)
 ```
 
-```{r Define some helper functions, include=FALSE}
+```{r Define some helper functions, include=TRUE}
 import_projection <- function(proj_dir, proj_name){
   # Import a 2D projection -- this is used for visualization
   proj_coords <- read.csv(paste(proj_dir, proj_name, sep="/"), header=F, sep=" ")
@@ -132,7 +132,7 @@ get_cluster_means <- function(in_data, dim1, dim2, cluster_var){
 
 The directories below are set up to use pre-generated data. You may need to change them if you use the driver scripts (`call_umap_script.sh` and `call_hdbscan_script.py`) without changing the directories specified there.
 
-```{r Set up data directories and files and import data, include=FALSE}
+```{r Set up data directories and files and import data, include=TRUE}
 proj_dir <-"data"
 # UMAP projection to use for visualization
 proj_name <- "1000G_UMAP_PC100_NC2_NN15_MD0.5_admixturenotebook"
