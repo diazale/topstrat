@@ -9,7 +9,7 @@ output:
 
 # Introduction
 
-This is a demonstration of visualization of the method used in *Topological stratification of continuous genetic variation in large biobanks* by Diaz-Papkovich et al. We use data from the Thousand Genomes Project (1KGP) to generate static images via `ggplot2` and interactive plots using `plotly`. This script does not generate UMAP or HDBSCAN data---these are created in the accompanying Python scripts.
+This is a demonstration of visualization of the method used in *[Topological stratification of continuous genetic variation in large biobanks](https://www.biorxiv.org/content/10.1101/2023.07.06.548007v1)* by Diaz-Papkovich et al. We use data from the Thousand Genomes Project (1KGP) to generate static images via `ggplot2` and interactive plots using `plotly`. This script does not generate UMAP or HDBSCAN data---these are created in the accompanying Python scripts.
 
 The first portion of the script creates a static plot; the second creates an interactive plot.
 
