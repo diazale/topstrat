@@ -116,6 +116,6 @@ These can be found in the `data` directory:
 
 ## Citations
 
-1. Diaz-Papkovich et al. "[Topological stratification of continuous genetic variation in large biobanks](https://www.biorxiv.org/content/10.1101/2023.07.06.548007v1)." (2023)
+1. Diaz-Papkovich et al. "[Topological stratification of continuous genetic variation in large biobanks](https://www.biorxiv.org/content/10.1101/2023.07.06.548007v1)." bioRxiv (2023): 2023-07
 2. McInnes, Leland, John Healy, and James Melville. "[UMAP: Uniform manifold approximation and projection for dimension reduction.](https://arxiv.org/abs/1802.03426)" arXiv:1802.03426 (2018).
 3. Malzer, Claudia, and Marcus Baum. "[A hybrid approach to hierarchical density-based cluster selection.](https://ieeexplore.ieee.org/abstract/document/9235263)" 2020 IEEE international conference on multisensor fusion and integration for intelligent systems (MFI). IEEE, 2020.
