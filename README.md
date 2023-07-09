@@ -114,8 +114,24 @@ These can be found in the `data` directory:
 * `hdbscan_labels_min25_EPS0.5_1000G_UMAP_PC16_NC5_NN50_MD0.01_euclidean_2019814225811`: Clusters used in the manuscript
 * `pca_1000g_100`: Top 100 PCs for the 1KGP 
 
-## Citations
+## References
 
 1. Diaz-Papkovich et al. "[Topological stratification of continuous genetic variation in large biobanks](https://www.biorxiv.org/content/10.1101/2023.07.06.548007v1)." bioRxiv (2023): 2023-07
 2. McInnes, Leland, John Healy, and James Melville. "[UMAP: Uniform manifold approximation and projection for dimension reduction.](https://arxiv.org/abs/1802.03426)" arXiv:1802.03426 (2018).
 3. Malzer, Claudia, and Marcus Baum. "[A hybrid approach to hierarchical density-based cluster selection.](https://ieeexplore.ieee.org/abstract/document/9235263)" 2020 IEEE international conference on multisensor fusion and integration for intelligent systems (MFI). IEEE, 2020.
+
+# Citation
+
+To cite these scripts or the research, use:
+
+```
+@misc{diaz-papkovich2023
+	title = {Topological stratification of continuous genetic variation in large biobanks},
+	url = {https://www.biorxiv.org/content/10.1101/2023.07.06.548007},
+	doi = {10.1101/2023.07.06.548007},
+	publisher = {bioRxiv},
+	author = {Diaz-Papkovich, Alex and Zabad, Shadi and Ben-Eghan, Chief and Anderson-Trocmé, Luke and Femerling, Georgette and Nathan, Vikram and Patel, Jenisha and Gravel, Simon},
+	month = jul,
+	year = {2023}
+}
+```
