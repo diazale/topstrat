@@ -131,7 +131,6 @@ To cite these scripts or the research, use:
 	doi = {10.1101/2023.07.06.548007},
 	publisher = {bioRxiv},
 	author = {Diaz-Papkovich, Alex and Zabad, Shadi and Ben-Eghan, Chief and Anderson-Trocmé, Luke and Femerling, Georgette and Nathan, Vikram and Patel, Jenisha and Gravel, Simon},
-	month = jul,
 	year = {2023}
 }
 ```
