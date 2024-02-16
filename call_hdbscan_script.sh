@@ -9,10 +9,6 @@ PGM_PATH=hdbscan_clustering.py
 # ls projections/*.txt > umap_list.txt
 PROJ_LIST=umap_list.txt
 
-# HDBSCAN parameters
-EPS_LIST=(0.3 0.5)
-MP_LIST=(25 50)
-
 # Directories to store results
 OUT_DIR=hdbscan_clusters
 LOG_DIR=hdbscan_logs
@@ -33,22 +29,15 @@ declare -a UMAPS=($(cat ${PROJ_LIST} | tr '\n' ' '))
 # Loop over each UMAP file and each HDBSCAN parametrization
 for UMAP in ${UMAPS[@]}
 do
-    for EPS in ${EPS_LIST[@]}
-    do
-        for MP in ${MP_LIST[@]}
-        do
-            echo "Beginning file ${UMAP}"
-            echo "Epsilon: ${EPS}, Minimum points: ${MP}"
+    echo "Beginning file ${UMAP}"
 
-            python ${PGM_PATH} \
-                    -dset ${UMAP} \
-                    -min_points ${MP} \
-                    -eps ${EPS} \
-                    -head ${HEAD} \
-                    -probs ${PROBS} \
-                    -outdir ${OUT_DIR} \
-                    -probdir ${PROB_DIR} \
-                    -log ${LOG_DIR}
-        done
-    done
+    python ${PGM_PATH} \
+            -dset ${UMAP} \
+            -min_points 25 50 \
+            -eps 0.3 0.5 \
+            -head ${HEAD} \
+            -probs ${PROBS} \
+            -outdir ${OUT_DIR} \
+            -probdir ${PROB_DIR} \
+            -log ${LOG_DIR}
 done

@@ -17,6 +17,8 @@ Inputs:
 At the moment this script only returns cluster labels and membership probabilities.
 However, it stores the clusterer object and could be used to return over values like the MST.
 
+
+
 """
 
 import argparse
@@ -52,11 +54,12 @@ File names are generated automatically based on the input file and parameters.
 EXAMPLE USAGE
 
 Dataset: my_umap.txt
-Run HDBSCAN on my_umap.txt with a minimum of 25 points per cluster and an epsilon value of 0.3, assuming no headers. We want membership probabilities.
+Run HDBSCAN on my_umap.txt with a minimum of 15 and 25 points per cluster and an epsilon value of 0.3, 
+assuming no headers. We want membership probabilities.
 
 python hdbscan_clustering.py \\
 -dset ~/my_clustering_project/umap_data/my_umap.txt \\
--min_points 25 \\
+-min_points 15 25 \\
 -eps 0.3 \\
 -head F \\
 -probs T \\
@@ -71,14 +74,14 @@ parser = argparse.ArgumentParser(description='Run HDBSCAN on specified datasets.
 
 parser.add_argument('-dset', metavar='DSET', type=str,
                     help='Input dataset')
-parser.add_argument('-min_points', metavar='MP', type=int,
+parser.add_argument('-min_points', metavar='MP', type=int, nargs='+',
                     default=25,
-                    help='Minimum number of points in a cluster (default 25)')
+                    help='List of minimum number of points in a cluster (default 25)')
 parser.add_argument('-head', metavar='HEAD', type=str2bool,
                     help='Indicate whether the file has headers')
-parser.add_argument('-eps', metavar='EPSILON', type=float,
+parser.add_argument('-eps', metavar='EPSILON', type=float, nargs='+',
                     default=0.3,
-                    help='Epsilon value for unequal population sizes (default 0.3)')
+                    help='List of epsilon value for unequal population sizes (default 0.3)')
 parser.add_argument('-probs', metavar='PROB', type=str2bool,
                     help='Select whether to return cluster membership probabilities')
 
@@ -97,9 +100,9 @@ args = parser.parse_args()
 
 # Import arguments
 dset = args.dset
-min_points = args.min_points
+min_points_list = args.min_points
 has_headers = args.head
-eps = args.eps
+eps_list = args.eps
 probs = args.probs
 
 out_dir = args.outdir
@@ -135,52 +138,55 @@ proj = np.loadtxt(dset)
 # time stamp to keep track of files after multiple runs
 tstamp = time.strftime('%Y%m%d_%H%M%S',time.localtime(time.time()))
 
-print('File:', fname)
-print('Minimum points:', str(min_points))
-print('Epsilon for selection:', str(eps))
+for min_points in min_points_list:
+    for eps in eps_list:
 
-# set up logging
-log_name = 'log_clustering_MP' + str(min_points) + '_' + tstamp + '_' + \
-           fname.split('.txt')[0] + '.txt'
-log_file = os.path.join(log_dir, log_name)
+        print('File:', fname)
+        print('Minimum points:', str(min_points))
+        print('Epsilon for selection:', str(eps))
 
-orig_stdout = sys.stdout # print() statements
-orig_stderr = sys.stderr # terminal statements
-f = open(log_file, 'w')
-sys.stdout = f
-sys.stderr = f
+        # set up logging
+        log_name = 'log_clustering_MP' + str(min_points) + '_' + tstamp + '_' + \
+                   fname.split('.txt')[0] + '.txt'
+        log_file = os.path.join(log_dir, log_name)
 
-print('File:', fname)
+        orig_stdout = sys.stdout # print() statements
+        orig_stderr = sys.stderr # terminal statements
+        f = open(log_file, 'w')
+        sys.stdout = f
+        sys.stderr = f
 
-start_time = time.time()
-clusterer = hdbscan.HDBSCAN(min_cluster_size=min_points,cluster_selection_epsilon=eps).fit(proj)
-end_time = time.time()
+        print('File:', fname)
 
-print('Time to cluster:', str(end_time - start_time))
-print('Number of clusters:', str(max(clusterer.labels_)))
-print('Number unassigned:', str(np.sum(clusterer.labels_ == -1)))
+        start_time = time.time()
+        clusterer = hdbscan.HDBSCAN(min_cluster_size=min_points,cluster_selection_epsilon=eps).fit(proj)
+        end_time = time.time()
 
-fname_temp = 'hdbscan_labels_min' + str(min_points) + '_EPS' + \
-str(eps) + '_' + fname.split('.txt')[0] + '.txt'
+        print('Time to cluster:', str(end_time - start_time))
+        print('Number of clusters:', str(max(clusterer.labels_)))
+        print('Number unassigned:', str(np.sum(clusterer.labels_ == -1)))
 
-fname_probs_temp = 'hdbscan_probs_min' + str(min_points) + '_EPS' + \
-str(eps) + '_' + fname.split('.txt')[0] + '.txt'
+        fname_temp = 'hdbscan_labels_min' + str(min_points) + '_EPS' + \
+        str(eps) + '_' + fname.split('.txt')[0] + '.txt'
 
-np.savetxt(os.path.join(out_dir, fname_temp), clusterer.labels_, fmt='%i')
+        fname_probs_temp = 'hdbscan_probs_min' + str(min_points) + '_EPS' + \
+        str(eps) + '_' + fname.split('.txt')[0] + '.txt'
 
-# If the user specifies probabilities, create the file
-# We'll use 6 digits for a total of 8 characters
-if probs:
-    np.savetxt(os.path.join(prob_dir, fname_probs_temp), np.round(clusterer.probabilities_,6), fmt='%1.6f')
+        np.savetxt(os.path.join(out_dir, fname_temp), clusterer.labels_, fmt='%i')
 
-# restore print statements to terminal
-sys.stdout = orig_stdout
-sys.stderr = orig_stderr
-f.close()
+        # If the user specifies probabilities, create the file
+        # We'll use 6 digits for a total of 8 characters
+        if probs:
+            np.savetxt(os.path.join(prob_dir, fname_probs_temp), np.round(clusterer.probabilities_,6), fmt='%1.6f')
 
-print('Time to cluster:', str(end_time - start_time))
-print('Number of clusters:', str(max(clusterer.labels_)))
-print('Number unassigned:', str(np.sum(clusterer.labels_ == -1)))
-print('Cluster label file:', str(fname_temp))
-print('Cluster membership strength file:', str(fname_probs_temp))
-print()
+        # restore print statements to terminal
+        sys.stdout = orig_stdout
+        sys.stderr = orig_stderr
+        f.close()
+
+        print('Time to cluster:', str(end_time - start_time))
+        print('Number of clusters:', str(max(clusterer.labels_)))
+        print('Number unassigned:', str(np.sum(clusterer.labels_ == -1)))
+        print('Cluster label file:', str(fname_temp))
+        print('Cluster membership strength file:', str(fname_probs_temp))
+        print()
