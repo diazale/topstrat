@@ -193,7 +193,7 @@ try:
             for pc in data_contents:
                 pca_data.append(pc.split()[n_id:len(pc)])  # Skip the ID columns
 
-        pca_data_array = np.array(pca_data).astype(np.float)
+        pca_data_array = np.array(pca_data).astype(float)
 
         print(pca_data_array.shape)
 
