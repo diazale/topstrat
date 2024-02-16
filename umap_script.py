@@ -104,14 +104,16 @@ parser.add_argument('-met', metavar='MET', type=str,
                     default='euclidean',
                     help='Type of distance metric to use (default euclidean)')
 parser.add_argument('-outdir', metavar='OUTDIR', type=str,
-                    help='Output directory')
+                    default='umap_data',
+                    help='Output directory (default: umap_data)')
 parser.add_argument('-head', metavar='HEADERS', type=str2bool,
                     help='Indicate whether the file has headers')
 parser.add_argument('-n_id', metavar='NID', type=int,
                     default=2,
-                    help='Number of ID columns')
+                    help='Number of ID columns (default 2)')
 parser.add_argument('-log', metavar='LOG', type=str,
-                    help='Log directory')
+                    default='umap_logs',
+                    help='Log directory (default: umap_logs)')
 
 args = parser.parse_args()
 
@@ -149,6 +151,13 @@ if pcs < nc:
 # Record parameters in a string
 param_str = dset.split('/')[-1].split('.txt')[0] + '_UMAP_PC' + str(pcs) + '_NC' + str(nc) + '_NN' \
             + str(nn) + '_MD' + str(md) + '_' + met
+
+# If the output and log directories don't exist, create them
+if not os.path.exists(log_dir):
+    os.makedirs(log_dir)
+
+if not os.path.exists(out_dir):
+    os.makedirs(out_dir)
 
 # Set up the log file
 log_file = os.path.join(log_dir, 'log_umap_' + param_str + '_' + tstamp + '.txt')

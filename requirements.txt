@@ -1,15 +1,2 @@
-Cython==0.29.34
-hdbscan==0.8.29
-importlib-metadata==6.6.0
-joblib==1.2.0
-llvmlite==0.39.1
-numba==0.56.4
-numpy==1.21.6
-pynndescent==0.5.10
-scikit-learn==1.0.2
-scipy==1.7.3
-threadpoolctl==3.1.0
-tqdm==4.65.0
-typing_extensions==4.5.0
-umap-learn==0.5.3
-zipp==3.15.0
+hdbscan
+umap-learn

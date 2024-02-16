@@ -72,21 +72,26 @@ parser = argparse.ArgumentParser(description='Run HDBSCAN on specified datasets.
 parser.add_argument('-dset', metavar='DSET', type=str,
                     help='Input dataset')
 parser.add_argument('-min_points', metavar='MP', type=int,
-                    help='Minimum number of points in a cluster')
+                    default=25,
+                    help='Minimum number of points in a cluster (default 25)')
 parser.add_argument('-head', metavar='HEAD', type=str2bool,
                     help='Indicate whether the file has headers')
 parser.add_argument('-eps', metavar='EPSILON', type=float,
-                    help='Epsilon value for unequal population sizes')
+                    default=0.3,
+                    help='Epsilon value for unequal population sizes (default 0.3)')
 parser.add_argument('-probs', metavar='PROB', type=str2bool,
                     help='Select whether to return cluster membership probabilities')
 
 # Directories
 parser.add_argument('-outdir', metavar='OUTDIR',type=str,
-                    help='Output directory for cluster labels')
+                    default='hdbscan_clusters',
+                    help='Output directory for cluster labels (default: hdbscan_clusters)')
 parser.add_argument('-probdir', metavar='PROBDIR', type=str,
-                    help='Output directory for cluster membership probabilities')
+                    default='hdbscan_probs',
+                    help='Output directory for cluster membership probabilities (default: hdbscan_probs)')
 parser.add_argument('-log', metavar='LOGDIR',type=str,
-                    help='Log directory')
+                    default='hdbscan_logs',
+                    help='Log directory (default: hdbscan_logs)')
 
 args = parser.parse_args()
 
@@ -100,6 +105,28 @@ probs = args.probs
 out_dir = args.outdir
 prob_dir = args.probdir
 log_dir = args.log
+
+# Check if important parameters have been left empty
+if dset is None:
+    print("ERROR: No input dataset specified.")
+    sys.exit(1)
+elif out_dir is None:
+    print("ERROR: No output dataset specified.")
+    sys.exit(1)
+elif has_headers is None:
+    print("ERROR: Headers not specified.")
+    sys.exit(1)
+
+# Check if the directories exist
+# If not, create them
+if not os.path.exists(log_dir):
+    os.makedirs(log_dir)
+
+if not os.path.exists(out_dir):
+    os.makedirs(out_dir)
+
+if (not prob_dir is None) and (not os.path.exists(prob_dir)):
+    os.makedirs(prob_dir)
 
 fname = dset.split('/')[-1]
 
