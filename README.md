@@ -1,3 +1,9 @@
+# Updates
+
+* Feb 19, 2024:
+  * The `requirements.txt` file has been simplified to avoid dependency issues. It now only requires the libraries for UMAP and HDBSCAN, along with their implicit dependencies (e.g. numpy). The libraries required for the manuscript are in `requirements_project.txt`
+  * The command-line scripts to run UMAP (`umap_script.py`) and HDBSCAN (`hdbscan_clustering.py`) now accept lists of parameters. This should save time by not having to reload a dataset every time you use new parameters, particularly for the UMAP script. Example: `python umap_script.py -dset my_data.txt -pc 7 8 9 -nc 2 3 4`. Demo scripts have been updated to reflect these changes.
+
 # Topological stratification of biobank data
 
 This repo contains code and documentation related to the manuscript *[Topological stratification of continuous genetic variation in large biobanks](https://www.biorxiv.org/content/10.1101/2023.07.06.548007v1)* by Diaz-Papkovich et al<sup>1</sup>. Our methodology uses UMAP<sup>2</sup> and the Malzer and Baum update to HDBSCAN, HDBSCAN($\hat{\epsilon}$)<sup>3</sup>. 
@@ -17,6 +23,7 @@ The UMAP script uses 8 parameters and assumes the input is the PCA data:
 * Minimum distance in the low dimensional space
 * Number of components (dimensions) to reduce to. For clustering, we recommend a value of at least 3.
 * Flag to indicate if the input file has headers
+* Number of ID columns in the data, e.g. FID and IID. These will be skipped on import.
 * Output directory
 * Log directory
 
@@ -27,10 +34,11 @@ To execute the script, you can run:
 ```
 umap_script.py \
 -dset [data path] \
--pc [number of PCs] \
--nn [number of neighbours] \
--md [minimum distance] \
--nc [number of components] \
+-pc [list of number of PCs] \
+-nn [list of number of neighbours] \
+-md [list of minimum distances] \
+-nc [list of numbers of components] \
+-n_id [number of ID columns] \
 -head [header flag] \
 -outdir [output directory] \
 -log [log directory]
@@ -57,8 +65,8 @@ To execute the script, you can run:
 ```
 python hdbscan_clustering.py \
 -dset [UMAP data] \
--min_points [minimum points] \
--eps [epsilon] \
+-min_points [list of minimum points] \
+-eps [list of epsilons] \
 -head [header flag] \
 -probs [probability flag] \
 -outdir [output directory] \
