@@ -2,7 +2,7 @@
 
 * Feb 19, 2024:
   * The `requirements.txt` file has been simplified to avoid dependency issues. It now only requires the libraries for UMAP and HDBSCAN, along with their implicit dependencies (e.g. numpy). The libraries required for the manuscript are in `requirements_project.txt`
-  * The command-line scripts to run UMAP (`umap_script.py`) and HDBSCAN (`hdbscan_clustering.py`) now accept lists of parameters. This should save time by not having to reload a dataset every time you use new parameters, particularly for the UMAP script. Example: `python umap_script.py -dset my_data.txt -pc 7 8 9 -nc 2 3 4`. Demo scripts have been updated to reflect these changes.
+  * The command-line scripts to run UMAP (`umap_script.py`) and HDBSCAN (`hdbscan_clustering.py`) now accept lists of parameters. This should save time by not having to reload a dataset every time you use new parameters, particularly for the UMAP script. Example: `python umap_script.py -dset my_data.txt -pc 7 8 9 -nc 2 3 4 [etc...]`. Demo scripts have been updated to reflect these changes.
 
 # Topological stratification of biobank data
 
