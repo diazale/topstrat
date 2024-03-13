@@ -32,7 +32,7 @@ The UMAP script uses 8 parameters and assumes the input is the PCA data:
 To execute the script, you can run:
 
 ```
-umap_script.py \
+python umap_script.py \
 -dset [data path] \
 -pc [list of number of PCs] \
 -nn [list of number of neighbours] \
